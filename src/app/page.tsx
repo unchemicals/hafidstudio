@@ -1,12 +1,24 @@
 // --- File: src/app/page.tsx ---
-// Perbaikan error build dari Vercel dan optimasi gambar.
+// Perbaikan terakhir untuk error build di Vercel.
 
 "use client";
 
 import { useState, useEffect, useRef } from "react";
 import { Twitter, Linkedin, Instagram, Mail } from "lucide-react";
-// import Image from 'next/image'; // <-- FIX: Komponen Image dihapus untuk kompatibilitas
+// import Image from 'next/image'; // FIX: Dihapus untuk mengatasi build error
 
+// --- FIX: Mendefinisikan tipe data untuk bintang ---
+interface Star {
+  x: number;
+  y: number;
+  radius: number;
+  alpha: number;
+  twinkle: number;
+  vx: number;
+  vy: number;
+}
+
+// --- Komponen baru untuk efek kosmik ---
 const CosmicBackground = () => {
   const nebulaRef = useRef<HTMLDivElement>(null);
   const starsRef = useRef<HTMLCanvasElement>(null);
@@ -40,7 +52,8 @@ const CosmicBackground = () => {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    let stars: any[] = [],
+    // Menggunakan tipe 'Star' yang sudah didefinisikan
+    let stars: Star[] = [],
       animationFrameId: number;
     const setup = () => {
       canvas.width = window.innerWidth;
@@ -161,7 +174,6 @@ export default function HomePage() {
       timeoutId: NodeJS.Timeout;
     const type = () => {
       const currentText = questions[qIndex];
-      // FIX #1: Menggunakan 'const' karena variabel tidak diubah lagi.
       const displayText = isDeleting
         ? currentText.substring(0, textIndex--)
         : currentText.substring(0, textIndex++);
@@ -234,7 +246,6 @@ export default function HomePage() {
         <main className="w-full max-w-4xl mx-auto my-auto flex-grow flex flex-col justify-center transform -translate-y-4 sm:-translate-y-6">
           <div className="grid grid-cols-1 md:grid-cols-5 gap-8 items-center">
             <div className="md:col-span-3 text-center md:text-left">
-              {/* FIX #2: Mengganti ' menjadi &apos; */}
               <h1 className="text-5xl lg:text-6xl font-bold tracking-tight">
                 Hi, I&apos;m Hafid 👨‍💻
               </h1>
@@ -265,13 +276,13 @@ export default function HomePage() {
               </div>
             </div>
             <div className="md:col-span-2 flex justify-center md:justify-end order-first md:order-last">
-              {/* FIX #3: Mengganti komponen <Image> kembali ke <img> standar */}
+              {/* FIX: Menggunakan kembali tag <img> standar untuk menghindari build error */}
               <img
                 src="/hafid-photo.jpg"
                 alt="Foto Profil Hafid"
                 className="w-40 h-40 lg:w-48 lg:h-48 rounded-full border-4 border-gray-700/50 object-cover shadow-2xl"
                 onError={(e) => {
-                  e.currentTarget.src =
+                  (e.target as HTMLImageElement).src =
                     "https://placehold.co/200x200/1a1a1a/ffffff?text=H";
                 }}
               />

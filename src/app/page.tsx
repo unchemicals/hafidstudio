@@ -1,18 +1,20 @@
 // --- File: src/app/page.tsx ---
-// Final UX: Pertanyaan menjadi tombol interaktif untuk memulai chat baru.
+// Perbaikan error build dari Vercel dan optimasi gambar.
 
 "use client";
 
 import { useState, useEffect, useRef } from "react";
 import { Twitter, Linkedin, Instagram, Mail } from "lucide-react";
+// import Image from 'next/image'; // <-- FIX: Komponen Image dihapus untuk kompatibilitas
 
 const CosmicBackground = () => {
-  const nebulaRef = useRef(null);
-  const starsRef = useRef(null);
-  const meteorsRef = useRef(null);
+  const nebulaRef = useRef<HTMLDivElement>(null);
+  const starsRef = useRef<HTMLCanvasElement>(null);
+  const meteorsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleMouseMove = (e) => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (window.innerWidth < 768) return;
       const { clientX, clientY } = e;
       const x = (clientX / window.innerWidth - 0.5) * 2;
       const y = (clientY / window.innerHeight - 0.5) * 2;
@@ -37,8 +39,9 @@ const CosmicBackground = () => {
     const canvas = starsRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
-    let stars = [],
-      animationFrameId;
+    if (!ctx) return;
+    let stars: any[] = [],
+      animationFrameId: number;
     const setup = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -112,7 +115,15 @@ const CosmicBackground = () => {
   );
 };
 
-const SocialLink = ({ href, icon: Icon, ariaLabel }) => (
+const SocialLink = ({
+  href,
+  icon: Icon,
+  ariaLabel,
+}: {
+  href: string;
+  icon: React.ElementType;
+  ariaLabel: string;
+}) => (
   <a
     href={href}
     target="_blank"
@@ -131,8 +142,6 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [animatedPlaceholder, setAnimatedPlaceholder] = useState("");
   const [submittedQuestion, setSubmittedQuestion] = useState("");
-
-  // === PERUBAHAN 1: State baru untuk mengontrol mode edit ===
   const [isEditing, setIsEditing] = useState(false);
 
   const isFinishedAnswering =
@@ -142,32 +151,30 @@ export default function HomePage() {
 
   useEffect(() => {
     const questions = [
-      "Halo, apa kabar?...",
-      "Lagi tertarik sama apa?...",
-      "Bagaimana cara menghubungimu?...",
-      "Spill skor UTBK",
-      "Ask general question, ex: Apa itu large language models?...",
-      "Udah punya pacar?...",
+      "Tanya tentang kuliahku...",
+      "Apa saja hobimu?",
+      "Bagaimana cara menghubungimu?",
     ];
     let qIndex = 0,
       textIndex = 0,
       isDeleting = false,
-      timeoutId;
+      timeoutId: NodeJS.Timeout;
     const type = () => {
       const currentText = questions[qIndex];
-      let displayText = isDeleting
+      // FIX #1: Menggunakan 'const' karena variabel tidak diubah lagi.
+      const displayText = isDeleting
         ? currentText.substring(0, textIndex--)
         : currentText.substring(0, textIndex++);
       setAnimatedPlaceholder(displayText);
       let typeSpeed = isDeleting ? 25 : 100;
       if (!isDeleting && textIndex === currentText.length) {
         isDeleting = true;
-        typeSpeed = 3000;
+        typeSpeed = 2000;
       } else if (isDeleting && textIndex === -1) {
         isDeleting = false;
         qIndex = (qIndex + 1) % questions.length;
         textIndex = 0;
-        typeSpeed = 1500;
+        typeSpeed = 500;
       }
       timeoutId = setTimeout(type, typeSpeed);
     };
@@ -187,25 +194,23 @@ export default function HomePage() {
     }
   }, [fullAnswer]);
 
-  const handleChatSubmit = async (e) => {
+  const handleChatSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!question.trim() || isLoading) return;
 
-    setSubmittedQuestion(question);
+    const currentQuestion = question;
+    setSubmittedQuestion(currentQuestion);
     setIsLoading(true);
     setFullAnswer("");
     setDisplayedAnswer("");
     setQuestion("");
-
-    // === PERUBAHAN 2: Reset mode edit setiap kali submit pertanyaan baru ===
     setIsEditing(false);
 
     try {
-      // Menggunakan `question` langsung karena `submittedQuestion` belum terupdate
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question }),
+        body: JSON.stringify({ question: currentQuestion }),
       });
       const data = await res.json();
       setFullAnswer(data.answer || "Maaf, tidak ada jawaban.");
@@ -217,6 +222,11 @@ export default function HomePage() {
     }
   };
 
+  const handleAskAgain = () => {
+    setIsEditing(true);
+    setDisplayedAnswer("");
+  };
+
   return (
     <div className="relative w-full h-screen bg-black text-white font-sans overflow-hidden">
       <CosmicBackground />
@@ -224,8 +234,9 @@ export default function HomePage() {
         <main className="w-full max-w-4xl mx-auto my-auto flex-grow flex flex-col justify-center transform -translate-y-4 sm:-translate-y-6">
           <div className="grid grid-cols-1 md:grid-cols-5 gap-8 items-center">
             <div className="md:col-span-3 text-center md:text-left">
+              {/* FIX #2: Mengganti ' menjadi &apos; */}
               <h1 className="text-5xl lg:text-6xl font-bold tracking-tight">
-                Hi, I'm Hafid 👨‍💻
+                Hi, I&apos;m Hafid 👨‍💻
               </h1>
               <p className="text-lg text-gray-300 mt-3">
                 Student @ Universitas Airlangga | AI & LLM Enthusiast
@@ -254,6 +265,7 @@ export default function HomePage() {
               </div>
             </div>
             <div className="md:col-span-2 flex justify-center md:justify-end order-first md:order-last">
+              {/* FIX #3: Mengganti komponen <Image> kembali ke <img> standar */}
               <img
                 src="/hafid-photo.jpg"
                 alt="Foto Profil Hafid"
@@ -266,13 +278,11 @@ export default function HomePage() {
             </div>
           </div>
           <div className="mt-12 w-full">
-            <h2 className="text-3xl font-semibold mb-4 text-center md:text-left">
-              Ask Anything About Hafid
+            <h2 className="text-4xl font-semibold mb-4 text-center md:text-left">
+              Ask About Hafid
             </h2>
             <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/40 p-3 sm:p-4 rounded-xl">
-              {/* === PERUBAHAN 3: Logika tampilan diubah total === */}
               {!submittedQuestion || isEditing ? (
-                // Tampilkan form jika belum ada pertanyaan ATAU sedang dalam mode edit
                 <form onSubmit={handleChatSubmit} className="relative w-full">
                   <textarea
                     id="chat"
@@ -281,11 +291,10 @@ export default function HomePage() {
                     onChange={(e) => setQuestion(e.target.value)}
                     placeholder={animatedPlaceholder + "│"}
                     className="w-full p-3 pr-16 bg-black/20 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all placeholder-gray-400 resize-none"
-                    // === PERUBAHAN 4: Logika "gajadi ngetik" ===
                     onBlur={() => {
-                      if (!question) setIsEditing(false);
+                      if (!question && submittedQuestion) setIsEditing(false);
                     }}
-                    autoFocus={isEditing} // Langsung fokus ke textarea saat mode edit
+                    autoFocus={isEditing}
                   />
                   <button
                     type="submit"
@@ -305,29 +314,22 @@ export default function HomePage() {
                   </button>
                 </form>
               ) : (
-                // Tampilkan pertanyaan yang sudah dikirim (pudar) JIKA tidak sedang mode edit
-                <div
-                  className="p-3 bg-black/20 rounded-lg"
-                  // === PERUBAHAN 5: Seluruh blok pertanyaan menjadi tombol ===
-                  onClick={() => {
-                    if (isFinishedAnswering) setIsEditing(true);
-                  }}
-                >
+                <div className="p-3 bg-black/20 rounded-lg">
                   <p
                     className={`text-gray-400 opacity-70 whitespace-pre-wrap break-words ${
                       isFinishedAnswering
                         ? "cursor-pointer hover:opacity-100"
                         : ""
                     }`}
+                    onClick={() => {
+                      if (isFinishedAnswering) handleAskAgain();
+                    }}
                   >
                     {submittedQuestion}
-                    {/* Tambahkan teks "Click untuk..." jika sudah selesai */}
-                    {isFinishedAnswering ? (
+                    {isFinishedAnswering && (
                       <span className="text-purple-400 ml-2">
                         (Click untuk tanya lagi)
                       </span>
-                    ) : (
-                      ""
                     )}
                   </p>
                 </div>
@@ -352,8 +354,6 @@ export default function HomePage() {
                   </div>
                 </div>
               )}
-
-              {/* Tombol lama dihapus, fungsinya dipindah ke blok pertanyaan */}
             </div>
           </div>
         </main>

@@ -295,9 +295,10 @@ export default function HomePage() {
             <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/40 p-3 sm:p-4 rounded-xl">
               {!submittedQuestion || isEditing ? (
                 <form onSubmit={handleChatSubmit} className="relative w-full">
+                  {/* FIX: Mengubah `rows="3"` menjadi `rows={3}` */}
                   <textarea
                     id="chat"
-                    rows="3"
+                    rows={3}
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
                     placeholder={animatedPlaceholder + "│"}

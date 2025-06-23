@@ -1,13 +1,12 @@
 // --- File: src/app/page.tsx ---
-// Perbaikan terakhir untuk error build di Vercel.
+// Versi final dengan perbaikan untuk semua error build Vercel.
 
 "use client";
 
 import { useState, useEffect, useRef } from "react";
 import { Twitter, Linkedin, Instagram, Mail } from "lucide-react";
-// import Image from 'next/image'; // FIX: Dihapus untuk mengatasi build error
 
-// --- FIX: Mendefinisikan tipe data untuk bintang ---
+// --- Mendefinisikan tipe data untuk bintang ---
 interface Star {
   x: number;
   y: number;
@@ -18,7 +17,7 @@ interface Star {
   vy: number;
 }
 
-// --- Komponen baru untuk efek kosmik ---
+// --- Komponen untuk efek kosmik ---
 const CosmicBackground = () => {
   const nebulaRef = useRef<HTMLDivElement>(null);
   const starsRef = useRef<HTMLCanvasElement>(null);
@@ -52,7 +51,6 @@ const CosmicBackground = () => {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    // Menggunakan tipe 'Star' yang sudah didefinisikan
     let stars: Star[] = [],
       animationFrameId: number;
     const setup = () => {
@@ -155,7 +153,7 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [animatedPlaceholder, setAnimatedPlaceholder] = useState("");
   const [submittedQuestion, setSubmittedQuestion] = useState("");
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(true);
 
   const isFinishedAnswering =
     !isLoading &&
@@ -164,9 +162,10 @@ export default function HomePage() {
 
   useEffect(() => {
     const questions = [
-      "Tanya tentang kuliahku...",
-      "Apa saja hobimu?",
-      "Bagaimana cara menghubungimu?",
+      "Halo, apa kabar?...",
+      "Lagi tertarik dengan hal apa?...",
+      "Spill skor UTBK...",
+      "Sudah punya pacar?...",
     ];
     let qIndex = 0,
       textIndex = 0,
@@ -205,6 +204,12 @@ export default function HomePage() {
       return () => clearInterval(intervalId);
     }
   }, [fullAnswer]);
+
+  useEffect(() => {
+    if (!isEditing && submittedQuestion) {
+      setDisplayedAnswer(fullAnswer);
+    }
+  }, [isEditing, submittedQuestion, fullAnswer]);
 
   const handleChatSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -276,7 +281,6 @@ export default function HomePage() {
               </div>
             </div>
             <div className="md:col-span-2 flex justify-center md:justify-end order-first md:order-last">
-              {/* FIX: Menggunakan kembali tag <img> standar untuk menghindari build error */}
               <img
                 src="/hafid-photo.jpg"
                 alt="Foto Profil Hafid"
@@ -290,12 +294,12 @@ export default function HomePage() {
           </div>
           <div className="mt-12 w-full">
             <h2 className="text-4xl font-semibold mb-4 text-center md:text-left">
-              Ask About Hafid
+              Ask Anything
             </h2>
             <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/40 p-3 sm:p-4 rounded-xl">
-              {!submittedQuestion || isEditing ? (
+              {isEditing ? (
                 <form onSubmit={handleChatSubmit} className="relative w-full">
-                  {/* FIX: Mengubah `rows="3"` menjadi `rows={3}` */}
+                  {/* FIX: Mengubah `rows="3"` menjadi `rows={3}` untuk tipe data yang benar */}
                   <textarea
                     id="chat"
                     rows={3}
@@ -353,7 +357,7 @@ export default function HomePage() {
                     {isLoading ? (
                       <div className="flex items-center gap-2">
                         <span className="animate-spin h-4 w-4 border-2 border-transparent border-t-white rounded-full"></span>
-                        <span>Mikir bentar...</span>
+                        <span>Mikir dulu bentar...</span>
                       </div>
                     ) : (
                       <p className="text-gray-200 text-sm sm:text-base whitespace-pre-wrap break-words">
